@@ -21,12 +21,21 @@ async function run() {
         const database = client.db('motorbikes_collection');
         const bikesCollection = database.collection('motorBikes');
         const ordersCollection = database.collection('orders');
+        const ratingCollection = database.collection('ratings');
+        const usersCollection = database.collection('users');
 
         // load data on UI from database
         app.get('/motorBikes', async (req, res) => {
             const cursor = bikesCollection.find({});
             const bikes = await cursor.toArray();
             res.send(bikes);
+        })
+        // GET all orders API
+        app.get('/orders', async (req, res) => {
+            const cursor = ordersCollection.find({});
+            const allOrders = await cursor.toArray();
+            res.send(allOrders);
+
         })
 
         // load single bike detail
@@ -37,14 +46,8 @@ async function run() {
             res.json(bike);
         })
 
-        // GET all orders API
-        app.get('/orders', async (req, res) => {
-            const cursor = ordersCollection.find({});
-            const myOrders = await cursor.toArray();
-            res.send(myOrders);
 
-        })
-        // GET Orders API by email
+        // GET specific Orders API by email
         app.get('/orders', async (req, res) => {
             const email = req.query.email;
             const query = { email: email };
@@ -53,6 +56,7 @@ async function run() {
             res.send(myOrders);
 
         })
+
 
         //    Add a new product to database and load on UI
         app.post('/motorbikes', async (req, res) => {
@@ -73,11 +77,28 @@ async function run() {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
             const result = await ordersCollection.deleteOne(query);
-            console.log('deleting', id);
             res.json(result);
         })
+        // POST user rating
 
+        app.post('/rating', async (req, res) => {
+            const rating = req.body;
+            const result = await ratingCollection.insertOne(rating);
+            res.json(result)
+        })
 
+        app.get('/rating', async (req, res) => {
+            const cursor = ratingCollection.find({});
+            const ratings = await cursor.toArray();
+            res.send(ratings);
+
+        })
+        app.post('/users', async (req, res) => {
+            const user = req.body;
+            const result = await usersCollection.insertOne(user);
+            console.log(result);
+            res.json(result);
+        });
     }
     finally {
         // await client.close();
