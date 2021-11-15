@@ -10,7 +10,7 @@ const port = process.env.PORT || 5000
 // middleware
 app.use(cors());
 app.use(express.json());
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ayoaw.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
+const uri = `mongodb+srv://bike_bandit:g95rALt4ixeZravW@cluster0.ayoaw.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
@@ -30,13 +30,7 @@ async function run() {
             const bikes = await cursor.toArray();
             res.send(bikes);
         })
-        // GET all orders API
-        app.get('/orders', async (req, res) => {
-            const cursor = ordersCollection.find({});
-            const allOrders = await cursor.toArray();
-            res.send(allOrders);
 
-        })
 
         // load single bike detail
         app.get('/motorbikes/:id', async (req, res) => {
@@ -49,13 +43,25 @@ async function run() {
 
         // GET specific Orders API by email
         app.get('/orders', async (req, res) => {
+            let query = {}
             const email = req.query.email;
-            const query = { email: email };
-            const cursor = ordersCollection.find(query);
-            const myOrders = await cursor.toArray();
-            res.send(myOrders);
+            if (email) {
+                query = { email: email };
+            }
 
+            const cursor = await ordersCollection.find(query);
+            const myOrder = await cursor.toArray();
+            res.send(myOrder);
         })
+
+        // })
+        // GET all orders API
+        // app.get('/orders', async (req, res) => {
+        //     const cursor = ordersCollection.find({});
+        //     const allOrders = await cursor.toArray();
+        //     res.send(allOrders);
+
+        // })
 
 
         //    Add a new product to database and load on UI
