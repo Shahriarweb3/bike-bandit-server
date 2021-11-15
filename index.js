@@ -10,7 +10,7 @@ const port = process.env.PORT || 5000
 // middleware
 app.use(cors());
 app.use(express.json());
-const uri = `mongodb+srv://bike_bandit:g95rALt4ixeZravW@cluster0.ayoaw.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ayoaw.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
@@ -53,15 +53,17 @@ async function run() {
             const myOrder = await cursor.toArray();
             res.send(myOrder);
         })
-
-        // })
-        // GET all orders API
-        // app.get('/orders', async (req, res) => {
-        //     const cursor = ordersCollection.find({});
-        //     const allOrders = await cursor.toArray();
-        //     res.send(allOrders);
-
-        // })
+        // UPDATE order status
+        app.put('/orders', async (req, res) => {
+            const order = req.body;
+            const filter = { OrderStatus: "Approved" };
+            const options = { upsert: true };
+            const updateOrderStatus = {
+                $set: { status: "Approved" }
+            }
+            const result = await ordersCollection.updateOne(filter, updateOrderStatus, options);
+            res.json(result);
+        })
 
 
         //    Add a new product to database and load on UI
@@ -85,7 +87,37 @@ async function run() {
             const result = await ordersCollection.deleteOne(query);
             res.json(result);
         })
-        // POST user rating
+
+        // DELETE product API
+        app.delete('/motorbikes/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await bikesCollection.deleteOne(query);
+            res.json(result);
+        })
+
+        // Make an admin API
+        app.put('/users/admin', async (req, res) => {
+            const admin = req.body;
+            console.log('put', admin);
+            const filter = { email: admin.email };
+            const updateDoc = { $set: { role: 'admin' } };
+            const result = await usersCollection.updateOne(filter, updateDoc);
+            res.json(result);
+        })
+        // GET API to check if an user is admin
+        app.get('/users/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const user = await usersCollection.findOne(query);
+            let isAdmin = false;
+            if (user?.role === 'admin') {
+                isAdmin = true;
+            }
+            res.json({ admin: isAdmin });
+        })
+
+        // POST user rating API
 
         app.post('/rating', async (req, res) => {
             const rating = req.body;
